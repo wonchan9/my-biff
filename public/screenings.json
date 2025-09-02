@@ -1,9 +1,41 @@
 {
   "updatedAt": "2025-09-02T12:00:00+09:00",
   "films": [
-    { "id": "f001", "titleKo": "어쩔 수가 없다", "titleEn": "No Other Choice", "runtime": 128 }
+    {
+      "id": "f001",
+      "titleKo": "어쩔 수가 없다",
+      "titleEn": "No Other Choice",
+      "runtime": 128,
+      "poster": "https://image.tmdb.org/t/p/w342/2CAL2433ZeIihfX1Hb2139CX0pW.jpg",
+      "detailUrl": "https://www.biff.kr/kor/film/program/..."
+    },
+    {
+      "id": "f002",
+      "titleKo": "바다의 노래",
+      "titleEn": "Song of the Sea",
+      "runtime": 93,
+      "poster": "https://image.tmdb.org/t/p/w342/hbH8C2W4V8Dq9nX1YcQW.jpg",
+      "detailUrl": "https://www.biff.kr/kor/film/program/..."
+    }
   ],
   "screenings": [
-    { "id": "s101", "filmId": "f001", "start": "2025-09-18T19:30:00+09:00", "end": "2025-09-18T21:38:00+09:00", "venue": "영화의전당", "theater": "야외극장", "code": "GP-001" }
+    {
+      "id": "s101",
+      "filmId": "f001",
+      "start": "2025-09-18T19:30:00+09:00",
+      "end":   "2025-09-18T21:38:00+09:00",
+      "venue": "영화의전당",
+      "theater": "야외극장",
+      "code": "GP-001"
+    },
+    {
+      "id": "s102",
+      "filmId": "f002",
+      "start": "2025-09-19T14:00:00+09:00",
+      "end":   "2025-09-19T15:33:00+09:00",
+      "venue": "CGV 센텀시티",
+      "theater": "6관",
+      "code": "AN-112"
+    }
   ]
 }
