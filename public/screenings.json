@@ -1,41 +1,24 @@
 {
-  "updatedAt": "2025-09-02T12:00:00+09:00",
   "films": [
-    {
-      "id": "f001",
-      "titleKo": "어쩔 수가 없다",
-      "titleEn": "No Other Choice",
-      "runtime": 128,
-      "poster": "https://image.tmdb.org/t/p/w342/2CAL2433ZeIihfX1Hb2139CX0pW.jpg",
-      "detailUrl": "https://www.biff.kr/kor/film/program/..."
-    },
-    {
-      "id": "f002",
-      "titleKo": "바다의 노래",
-      "titleEn": "Song of the Sea",
-      "runtime": 93,
-      "poster": "https://image.tmdb.org/t/p/w342/hbH8C2W4V8Dq9nX1YcQW.jpg",
-      "detailUrl": "https://www.biff.kr/kor/film/program/..."
-    }
-  ],
-  "screenings": [
-    {
-      "id": "s101",
-      "filmId": "f001",
-      "start": "2025-09-18T19:30:00+09:00",
-      "end":   "2025-09-18T21:38:00+09:00",
-      "venue": "영화의전당",
-      "theater": "야외극장",
-      "code": "GP-001"
-    },
-    {
-      "id": "s102",
-      "filmId": "f002",
-      "start": "2025-09-19T14:00:00+09:00",
-      "end":   "2025-09-19T15:33:00+09:00",
-      "venue": "CGV 센텀시티",
-      "theater": "6관",
-      "code": "AN-112"
-    }
+    { "id": 1, "titleKo": "어쩔수가없다", "titleEn": "No Other Choice", "category": "개막작", "director": "박찬욱", "country": "Korea", "detailUrl": "https://www.biff.kr/kor/html/program/prog_view.asp?idx=82735&c_idx=412&sp_idx=&QueryStep=2" },
+    { "id": 2, "titleKo": "고양이를 놓아줘", "titleEn": "Leave the Cat Alone", "category": "경쟁", "director": "시가야 다이스케", "country": "Japan", "detailUrl": "https://www.biff.kr/kor/html/program/prog_view.asp?idx=81743&c_idx=427&sp_idx=&QueryStep=2" },
+    { "id": 3, "titleKo": "광야시대", "titleEn": "Resurrection", "category": "경쟁", "director": "비간", "country": "China / France", "detailUrl": "https://www.biff.kr/kor/html/program/prog_view.asp?idx=82858&c_idx=427&sp_idx=&QueryStep=2" },
+    { "id": 4, "titleKo": "다른 이름으로", "titleEn": "By another name", "category": "경쟁", "director": "이제한", "country": "Korea", "detailUrl": "https://www.biff.kr/kor/html/program/prog_view.asp?idx=81956&c_idx=427&sp_idx=&QueryStep=2" },
+    { "id": 5, "titleKo": "또 다른 탄생", "titleEn": "Another Birth", "category": "경쟁", "director": "이저벨 칼란다", "country": "Tajikistan / United States / Qatar", "detailUrl": "https://www.biff.kr/kor/html/program/prog_view.asp?idx=82333&c_idx=427&sp_idx=&QueryStep=2" },
+    { "id": 6, "titleKo": "루오무의 황혼", "titleEn": "Gloaming in Luomu", "category": "경쟁", "director": "장률", "country": "China", "detailUrl": "https://www.biff.kr/kor/html/program/prog_view.asp?idx=82840&c_idx=427&sp_idx=&QueryStep=2" },
+    { "id": 7, "titleKo": "소녀", "titleEn": "Girl", "category": "경쟁", "director": "서기", "country": "Taiwan", "detailUrl": "https://www.biff.kr/kor/html/program/prog_view.asp?idx=82633&c_idx=427&sp_idx=&QueryStep=2" },
+    { "id": 8, "titleKo": "스파이 스타", "titleEn": "Spying Stars", "category": "경쟁", "director": "비묵티 자야순다라", "country": "France / Sri Lanka / India", "detailUrl": "https://www.biff.kr/kor/html/program/prog_view.asp?idx=82795&c_idx=427&sp_idx=&QueryStep=2" },
+    { "id": 9, "titleKo": "실연당한 사람들을 위한 일곱 시 조찬모임", "titleEn": "Seven O′Clock Breakfast Club for the Brokenhearted", "category": "경쟁", "director": "임선애", "country": "Korea", "detailUrl": "https://www.biff.kr/kor/html/program/prog_view.asp?idx=82258&c_idx=427&sp_idx=&QueryStep=2" },
+    { "id": 10, "titleKo": "어리석은 자는 누구인가", "titleEn": "BAKA′s Identity", "category": "경쟁", "director": "나가타 고토", "country": "Japan", "detailUrl": "https://www.biff.kr/kor/html/program/prog_view.asp?idx=82398&c_idx=427&sp_idx=&QueryStep=2" },
+    { "id": 11, "titleKo": "여행과 나날", "titleEn": "Two Seasons, Two Strangers", "category": "경쟁", "director": "미야케 쇼", "country": "Japan", "detailUrl": "https://www.biff.kr/kor/html/program/prog_view.asp?idx=81742&c_idx=427&sp_idx=&QueryStep=2" },
+    { "id": 12, "titleKo": "왼손잡이 소녀", "titleEn": "Left-Handed Girl", "category": "경쟁", "director": "쩌우스칭", "country": "Taiwan / France / United States / United Kingdom", "detailUrl": "https://www.biff.kr/kor/html/program/prog_view.asp?idx=82745&c_idx=427&sp_idx=&QueryStep=2" },
+    { "id": 13, "titleKo": "지우러 가는 길", "titleEn": "En Route To", "category": "경쟁", "director": "유재인", "country": "Korea", "detailUrl": "https://www.biff.kr/kor/html/program/prog_view.asp?idx=82819&c_idx=427&sp_idx=&QueryStep=2" },
+    { "id": 14, "titleKo": "충충충", "titleEn": "Funky Freaky Freaks", "category": "경쟁", "director": "한창록", "country": "Korea", "detailUrl": "https://www.biff.kr/kor/html/program/prog_view.asp?idx=82561&c_idx=427&sp_idx=&QueryStep=2" },
+    { "id": 15, "titleKo": "허락되지 않은", "titleEn": "Without Permission", "category": "경쟁", "director": "하산 나제르", "country": "Iran / United Kingdom", "detailUrl": "https://www.biff.kr/kor/html/program/prog_view.asp?idx=81214&c_idx=427&sp_idx=&QueryStep=2" },
+    { "id": 16, "titleKo": "국보", "titleEn": "KOKUHO", "category": "갈라 프레젠테이션", "director": "이상일", "country": "Japan", "detailUrl": "https://www.biff.kr/kor/html/program/prog_view.asp?idx=82140&c_idx=413&sp_idx=&QueryStep=2" },
+    { "id": 17, "titleKo": "굿뉴스", "titleEn": "Good News", "category": "갈라 프레젠테이션", "director": "변성현", "country": "Korea", "detailUrl": "https://www.biff.kr/kor/html/program/prog_view.asp?idx=82724&c_idx=413&sp_idx=&QueryStep=2" },
+    { "id": 18, "titleKo": "그저 사고였을 뿐", "titleEn": "It Was Just an Accident", "category": "갈라 프레젠테이션", "director": "자파르 파나히", "country": "Iran / France / Luxembourg", "detailUrl": "https://www.biff.kr/kor/html/program/prog_view.asp?idx=82756&c_idx=413&sp_idx=&QueryStep=2" },
+    { "id": 19, "titleKo": "프랑켄슈타인", "titleEn": "Frankenstein", "category": "갈라 프레젠테이션", "director": "기예르모 델 토로", "country": "United States", "detailUrl": "https://www.biff.kr/kor/html/program/prog_view.asp?idx=82430&c_idx=413&sp_idx=&QueryStep=2" },
+    { "id": 20, "titleKo": "공화국의 독수리", "titleEn": "Eagles of the Republic", "category": "아이콘", "director": "타릭 살레", "country": "Sweden / France / Denmark", "detailUrl": "https://www.biff.kr/kor/html/program/prog_view.asp?idx=82245&c_idx=414&sp_idx=&QueryStep=2" }
   ]
 }

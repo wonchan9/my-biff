@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 const STORAGE_KEY = 'mybiff:picks';
 
@@ -7,12 +7,12 @@ export default function Home() {
   const [data, setData] = useState(null);
   const [picks, setPicks] = useState(new Set());
 
-  // 처음에 picks 로드
+  // 로컬 저장된 찜 불러오기
   useEffect(() => {
     try {
       const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
       setPicks(new Set(saved));
-    } catch { /* noop */ }
+    } catch {}
   }, []);
 
   // 데이터 로드
@@ -23,74 +23,63 @@ export default function Home() {
       .catch(console.error);
   }, []);
 
-  // 저장 동기화
+  // 찜 동기화
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify([...picks]));
   }, [picks]);
 
-  const filmsById = useMemo(() => {
-    const m = new Map();
-    if (data?.films) data.films.forEach(f => m.set(f.id, f));
-    return m;
-  }, [data]);
-
-  const togglePick = (screeningId) => {
+  const togglePick = (id) => {
     setPicks(prev => {
-      const next = new Set(prev);
-      next.has(screeningId) ? next.delete(screeningId) : next.add(screeningId);
-      return next;
+      const s = new Set(prev);
+      s.has(id) ? s.delete(id) : s.add(id);
+      return s;
     });
   };
 
-  if (!data) return <div>로딩 중…</div>;
+  if (!data) return <div className="p-4 loading-text">로딩 중…</div>;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <header className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">mybiff · 전체 리스트</h1>
-        <div className="text-sm text-gray-600">내 찜: <b>{picks.size}</b>개</div>
+        <h1 className="text-2xl font-bold text-white">BIFF 2025 · 전체 영화</h1>
+        <div className="text-sm text-gray-400">내 찜: <span className="text-red-500 font-bold">{picks.size}</span>개</div>
       </header>
 
-      <ul className="grid sm:grid-cols-2 gap-4">
-        {data.screenings.map(sc => {
-          const film = filmsById.get(sc.filmId);
-          const picked = picks.has(sc.id);
+      <ul className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {data.films.map(film => {
+          const picked = picks.has(film.id);
           return (
-            <li key={sc.id} className="border rounded-2xl p-3 flex gap-3">
-              {/* 포스터 */}
-              <a href={film?.detailUrl} target="_blank" rel="noreferrer" className="shrink-0">
-                {/* next/image 대신 간단히 img 사용 */}
-                <img
-                  src={film?.poster}
-                  alt={film?.titleKo || 'poster'}
-                  className="w-24 h-36 object-cover rounded-xl"
-                  loading="lazy"
-                  onError={(e) => { e.currentTarget.src = 'https://via.placeholder.com/160x240?text=Poster'; }}
-                />
-              </a>
-
-              {/* 정보 */}
-              <div className="flex-1 min-w-0">
-                <div className="font-semibold truncate">{film?.titleKo} <span className="text-gray-500">({film?.titleEn})</span></div>
-                <div className="text-sm text-gray-600">
-                  {new Date(sc.start).toLocaleString()} · {sc.venue} {sc.theater} · 코드 {sc.code}
+            <li key={film.id} className="card bg-gray-900 shadow-lg border border-gray-800 hover:border-gray-700 transition-all duration-300 hover:-translate-y-1">
+              <div className="card-body">
+                <div className="mb-2">
+                  <span className="inline-block bg-red-600 text-white px-2 py-1 rounded text-xs">
+                    {film.category}
+                  </span>
                 </div>
 
-                <div className="mt-2 flex items-center gap-2">
+                <h2 className="card-title text-white mb-1">
+                  {film.titleKo}
+                </h2>
+                {film.titleEn ? <div className="text-gray-400 text-sm mb-3">{film.titleEn}</div> : null}
+
+                <div className="text-sm text-gray-400 space-y-1">
+                  <div>감독: {film.director}</div>
+                  <div>제작국가: {film.country}</div>
+                </div>
+
+                <div className="card-actions justify-end mt-4 gap-2">
                   <button
-                    onClick={() => togglePick(sc.id)}
-                    className={`px-3 py-1 rounded-lg text-sm ${picked ? 'bg-gray-200' : 'bg-black text-white'}`}
-                    aria-pressed={picked}
+                    onClick={() => togglePick(film.id)}
+                    className={`btn ${picked ? 'btn-biff-secondary' : 'btn-biff-primary'} transition-all duration-200`}
                   >
                     {picked ? '찜 해제' : '찜 담기'}
                   </button>
 
-                  {/* 자세히보기 → BIFF 상세 페이지로 이동 */}
                   <a
-                    href={film?.detailUrl}
+                    href={film.detailUrl}
                     target="_blank"
                     rel="noreferrer"
-                    className="text-sm underline text-gray-700"
+                    className="btn btn-biff-outline"
                   >
                     자세히보기
                   </a>
