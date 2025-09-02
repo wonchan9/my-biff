@@ -1,4 +1,5 @@
-'use client';
++'use client';
++import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 const STORAGE_KEY = 'mybiff:picks';
 
@@ -35,7 +36,7 @@ export default function PicksPage() {
       </header>
 
       {pickedScreenings.length === 0 ? (
-        <div className="text-gray-600">아직 담은 상영이 없어요. <a className="underline" href="/">전체 리스트</a>에서 담아보세요.</div>
+        <div className="text-gray-600">아직 담은 상영이 없어요. <Link className="underline" href="/">전체 리스트</Link>에서 담아보세요.</div>
       ) : (
         <ul className="grid sm:grid-cols-2 gap-4">
           {pickedScreenings.map(sc => {
