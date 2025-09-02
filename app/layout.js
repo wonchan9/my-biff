@@ -1,4 +1,4 @@
-+ import Link from 'next/link'
+import Link from 'next/link'
   import './globals.css';
 
   export const metadata = { title: 'mybiff' };

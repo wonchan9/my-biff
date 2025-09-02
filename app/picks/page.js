@@ -1,5 +1,5 @@
-+'use client';
-+import Link from 'next/link';
+'use client';
+import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 const STORAGE_KEY = 'mybiff:picks';
 
