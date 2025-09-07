@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Heart, ExternalLink, ArrowLeft } from 'lucide-react';
+import { Heart, ExternalLink, ArrowLeft, Calendar } from 'lucide-react';
 
 const STORAGE_KEY = 'mybiff:picks';
 
@@ -26,14 +26,13 @@ export default function PicksPage() {
   }, []);
 
   // 찜 동기화
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify([...picks]));
-  }, [picks]);
-
   const togglePick = (id) => {
     setPicks(prev => {
       const s = new Set(prev);
       s.has(id) ? s.delete(id) : s.add(id);
+      
+      // 여기서 직접 저장
+      localStorage.setItem(STORAGE_KEY, JSON.stringify([...s]));
       return s;
     });
   };
@@ -44,26 +43,30 @@ export default function PicksPage() {
   const pickedFilms = data.films?.filter(film => picks.has(film.id)) || [];
 
   return (
-    <div className="space-y-6">
+    <div className="min-h-screen bg-black text-white">
+      <main className="pt-20 max-w-4xl mx-auto px-4 py-6">
+        <div className="space-y-6"></div>
+      </main>
       {/* 헤더 */}
-      <div className="flex items-center gap-4">
-        <Link 
-          href="/" 
-          className="p-2 rounded-full hover:bg-gray-800 transition-colors"
-          title="전체 리스트로 돌아가기"
-        >
-          <ArrowLeft className="w-5 h-5 text-gray-400 hover:text-white" />
-        </Link>
-        <div>
-          <h1 className="text-2xl font-bold text-white flex items-center gap-3">
-            <Heart className="w-7 h-7 text-red-500 fill-current" />
-            내 찜 리스트
-          </h1>
-          <p className="text-sm text-gray-400 mt-1">
-            총 <span className="text-red-500 font-semibold">{picks.size}</span>개의 영화를 찜했습니다
-          </p>
+      <header className="fixed top-0 left-0 right-0 z-50 bg-gray-900 border-b border-gray-800 backdrop-blur-md">
+        <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Link href="/" className="p-2 rounded-full hover:bg-gray-800 transition-colors">
+             <ArrowLeft className="w-5 h-5 text-gray-400 hover:text-white" />
+           </Link>
+           <h1 className="text-xl font-bold text-white">찜 목록</h1>
+         </div>
+    
+         <div className="flex gap-2">
+          <div className="p-2 rounded-full bg-red-600">
+           <Heart className="w-6 h-6 text-white" />
         </div>
-      </div>
+        <Link href="/schedule" className="p-2 rounded-full hover:bg-gray-800 transition-colors">
+         <Calendar className="w-6 h-6 text-blue-500" />
+      </Link>
+    </div>
+  </div>
+</header>
 
       {/* 찜한 영화가 없을 때 */}
       {pickedFilms.length === 0 ? (
