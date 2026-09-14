@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Calendar, Clock, X, ArrowLeft, MapPin, Heart } from 'lucide-react';
+import { Calendar, Clock, X, ArrowLeft, MapPin, Heart, ExternalLink } from 'lucide-react';
 import { AVAILABLE_YEARS, DEFAULT_YEAR, getStoredYear, setStoredYear } from '@/lib/utils';
 import { useBiffData } from '@/lib/useBiffData';
 import AuthControl from '@/components/AuthControl';
@@ -155,6 +155,19 @@ export default function SchedulePage() {
                                 {item.venue}
                               </div>
                             </div>
+
+                            {/* 자세히보기 버튼 */}
+                            {item.detailUrl && (
+                              <a
+                                href={item.detailUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="inline-flex items-center gap-2 mt-3 px-4 py-2 bg-gray-800 text-gray-300 rounded-full text-sm hover:bg-gray-700 hover:text-white transition-colors"
+                              >
+                                <span>자세히</span>
+                                <ExternalLink className="w-4 h-4" />
+                              </a>
+                            )}
                           </div>
 
                           {/* 삭제 버튼 */}
