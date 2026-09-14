@@ -8,12 +8,22 @@ import AuthControl from '@/components/AuthControl';
 
 export default function SchedulePage() {
   const [year, setYear] = useState(DEFAULT_YEAR);
+  const [films, setFilms] = useState(null);
   const { mySchedule, removeFromSchedule } = useBiffData(year);
 
   // 회차(연도) 로드
   useEffect(() => {
     setYear(getStoredYear());
   }, []);
+
+  // 영화 데이터 로드 (자세히보기 링크용)
+  useEffect(() => {
+    if (!year) return;
+    fetch(`/screenings-${year}.json`)
+      .then(r => r.json())
+      .then(setFilms)
+      .catch(console.error);
+  }, [year]);
 
   const changeYear = (newYear) => {
     setStoredYear(newYear);
@@ -57,6 +67,11 @@ export default function SchedulePage() {
 
   const groupedSchedules = groupSchedulesByDate();
   const sortedDates = Object.keys(groupedSchedules).sort();
+
+  // 스케줄 항목의 filmId로 영화 상세 정보(detailUrl) 찾기
+  const getFilmDetailUrl = (filmId) => {
+    return films?.films?.find(film => film.id === filmId)?.detailUrl;
+  };
 
   return (
     <div className="min-h-screen bg-black text-white">
@@ -124,7 +139,9 @@ export default function SchedulePage() {
 
                 {/* 해당 날짜의 스케줄들 */}
                 <div className="space-y-3">
-                  {groupedSchedules[date].map((item) => (
+                  {groupedSchedules[date].map((item) => {
+                    const detailUrl = getFilmDetailUrl(item.filmId);
+                    return (
                     <div key={item.id} className="bg-gray-900 rounded-lg border border-gray-800 hover:border-gray-700 transition-colors">
                       <div className="p-6">
                         <div className="flex justify-between items-start">
@@ -157,9 +174,9 @@ export default function SchedulePage() {
                             </div>
 
                             {/* 자세히보기 버튼 */}
-                            {item.detailUrl && (
+                            {detailUrl && (
                               <a
-                                href={item.detailUrl}
+                                href={detailUrl}
                                 target="_blank"
                                 rel="noreferrer"
                                 className="inline-flex items-center gap-2 mt-3 px-4 py-2 bg-gray-800 text-gray-300 rounded-full text-sm hover:bg-gray-700 hover:text-white transition-colors"
@@ -181,7 +198,8 @@ export default function SchedulePage() {
                         </div>
                       </div>
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             ))}
