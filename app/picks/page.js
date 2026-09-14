@@ -1,19 +1,25 @@
 'use client';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Heart, ExternalLink, ArrowLeft, Calendar } from 'lucide-react';
-import { AVAILABLE_YEARS, DEFAULT_YEAR, getStoredYear, setStoredYear, migrateLegacyStorage } from '@/lib/utils';
+import { Heart, ExternalLink, Plus, ArrowLeft, Calendar } from 'lucide-react';
+import { AVAILABLE_YEARS, DEFAULT_YEAR, getStoredYear, setStoredYear, migrateLegacyStorage, buildScheduleItem, sortSchedule } from '@/lib/utils';
+import SchedulePopup from '@/components/SchedulePopup';
 
 const STORAGE_KEY = 'mybiff:picks';
+const SCHEDULE_STORAGE_KEY = 'mybiff:schedule';
 
 export default function PicksPage() {
   const [year, setYear] = useState(DEFAULT_YEAR);
   const [data, setData] = useState(null);
   const [picks, setPicks] = useState(new Set());
+  const [schedules, setSchedules] = useState([]);
+  const [mySchedule, setMySchedule] = useState([]);
+  const [selectedFilm, setSelectedFilm] = useState(null);
 
   // 회차(연도) 로드 + 레거시 저장값 이전
   useEffect(() => {
     migrateLegacyStorage(STORAGE_KEY);
+    migrateLegacyStorage(SCHEDULE_STORAGE_KEY);
     setYear(getStoredYear());
   }, []);
 
@@ -23,6 +29,15 @@ export default function PicksPage() {
     try {
       const saved = JSON.parse(localStorage.getItem(`${STORAGE_KEY}:${year}`) || '[]');
       setPicks(new Set(saved));
+    } catch {}
+  }, [year]);
+
+  // 로컬 저장된 내 스케줄 불러오기
+  useEffect(() => {
+    if (!year) return;
+    try {
+      const saved = JSON.parse(localStorage.getItem(`${SCHEDULE_STORAGE_KEY}:${year}`) || '[]');
+      setMySchedule(saved);
     } catch {}
   }, [year]);
 
@@ -36,6 +51,15 @@ export default function PicksPage() {
       .catch(console.error);
   }, [year]);
 
+  // 상영시간표 데이터 로드
+  useEffect(() => {
+    if (!year) return;
+    fetch(`/schedules-${year}.json`)
+      .then(r => r.json())
+      .then(setSchedules)
+      .catch(console.error);
+  }, [year]);
+
   // 찜 동기화
   const togglePick = (id) => {
     setPicks(prev => {
@@ -46,6 +70,35 @@ export default function PicksPage() {
       localStorage.setItem(`${STORAGE_KEY}:${year}`, JSON.stringify([...s]));
       return s;
     });
+  };
+
+  // 특정 영화의 상영시간표 가져오기
+  const getFilmSchedules = (filmId) => {
+    return schedules.filter(schedule => schedule.film_id === filmId);
+  };
+
+  // 스케줄에 추가
+  const addToMySchedule = (film, schedule) => {
+    const newItem = buildScheduleItem(film, schedule);
+
+    setMySchedule(prev => {
+      if (prev.some(item => item.id === newItem.id)) {
+        alert('이미 추가된 상영입니다.');
+        return prev;
+      }
+
+      const newSchedule = sortSchedule([...prev, newItem]);
+
+      try {
+        localStorage.setItem(`${SCHEDULE_STORAGE_KEY}:${year}`, JSON.stringify(newSchedule));
+      } catch (e) {
+        console.error('스케줄 저장 실패:', e);
+      }
+
+      return newSchedule;
+    });
+
+    setSelectedFilm(null);
   };
 
   const changeYear = (newYear) => {
@@ -115,7 +168,9 @@ export default function PicksPage() {
           {pickedFilms.map(film => {
             const categoryInfo = data.categories?.[film.categoryId];
             const subCategoryName = categoryInfo?.subcategories?.[film.subCategoryId];
-            
+            const filmSchedules = getFilmSchedules(film.id);
+            const hasSchedules = filmSchedules.length > 0;
+
             return (
               <div key={film.id} className="card bg-gray-900 shadow-lg border border-gray-800 hover:border-gray-700 transition-all duration-300 hover:-translate-y-1">
                 <div className="card-body">
@@ -155,15 +210,6 @@ export default function PicksPage() {
 
                   {/* 액션 버튼들 */}
                   <div className="flex items-center justify-between mt-auto">
-                    {/* 찜 해제 하트 버튼 */}
-                    <button
-                      onClick={() => togglePick(film.id)}
-                      className="p-3 rounded-full bg-red-600 text-white hover:bg-red-700 transition-all duration-200"
-                      title="찜 해제"
-                    >
-                      <Heart className="w-5 h-5 fill-current" />
-                    </button>
-
                     {/* 자세히보기 버튼 */}
                     {film.detailUrl && (
                       <a
@@ -176,6 +222,31 @@ export default function PicksPage() {
                         <ExternalLink className="w-4 h-4" />
                       </a>
                     )}
+
+                    <div className="flex gap-2">
+                      {/* 찜 해제 하트 버튼 */}
+                      <button
+                        onClick={() => togglePick(film.id)}
+                        className="p-3 rounded-full bg-red-600 text-white hover:bg-red-700 transition-all duration-200"
+                        title="찜 해제"
+                      >
+                        <Heart className="w-5 h-5 fill-current" />
+                      </button>
+
+                      {/* 스케줄 버튼 */}
+                      <button
+                        onClick={() => setSelectedFilm(film)}
+                        className={`p-3 rounded-full transition-all duration-200 ${
+                          hasSchedules
+                            ? 'bg-blue-800 text-blue-300 hover:bg-blue-700 hover:text-white'
+                            : 'bg-gray-800 text-gray-600 cursor-not-allowed'
+                        }`}
+                        title={hasSchedules ? '상영시간표 보기' : '상영시간표 없음'}
+                        disabled={!hasSchedules}
+                      >
+                        <Plus className="w-5 h-5" />
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -187,13 +258,23 @@ export default function PicksPage() {
       {/* 찜한 영화가 있을 때 하단 액션 */}
       {pickedFilms.length > 0 && (
         <div className="text-center pt-8 border-t border-gray-800">
-          <Link 
-            href="/" 
+          <Link
+            href="/"
             className="inline-flex items-center gap-2 px-6 py-3 bg-gray-800 text-gray-300 rounded-full hover:bg-gray-700 hover:text-white transition-colors"
           >
             더 많은 영화 찾기
           </Link>
         </div>
+      )}
+
+      {/* 상영시간표 팝업 */}
+      {selectedFilm && (
+        <SchedulePopup
+          film={selectedFilm}
+          filmSchedules={getFilmSchedules(selectedFilm.id)}
+          onClose={() => setSelectedFilm(null)}
+          onAddToSchedule={addToMySchedule}
+        />
       )}
     </div>
   );
