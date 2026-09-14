@@ -2,37 +2,18 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Calendar, Clock, X, ArrowLeft, MapPin, Heart } from 'lucide-react';
-import { AVAILABLE_YEARS, DEFAULT_YEAR, getStoredYear, setStoredYear, migrateLegacyStorage } from '@/lib/utils';
-
-const STORAGE_KEY_SCHEDULE = 'mybiff:schedule';
+import { AVAILABLE_YEARS, DEFAULT_YEAR, getStoredYear, setStoredYear } from '@/lib/utils';
+import { useBiffData } from '@/lib/useBiffData';
+import AuthControl from '@/components/AuthControl';
 
 export default function SchedulePage() {
   const [year, setYear] = useState(DEFAULT_YEAR);
-  const [mySchedule, setMySchedule] = useState([]);
+  const { mySchedule, removeFromSchedule } = useBiffData(year);
 
-  // 회차(연도) 로드 + 레거시 저장값 이전
+  // 회차(연도) 로드
   useEffect(() => {
-    migrateLegacyStorage(STORAGE_KEY_SCHEDULE);
     setYear(getStoredYear());
   }, []);
-
-  // 저장된 스케줄 불러오기
-  useEffect(() => {
-    if (!year) return;
-    try {
-      const savedSchedule = JSON.parse(localStorage.getItem(`${STORAGE_KEY_SCHEDULE}:${year}`) || '[]');
-      setMySchedule(savedSchedule);
-    } catch {}
-  }, [year]);
-
-  // 스케줄 동기화
-    const removeFromSchedule = (scheduleId) => {
-    setMySchedule(prev => {
-        const newSchedule = prev.filter(item => item.id !== scheduleId);
-        localStorage.setItem(`${STORAGE_KEY_SCHEDULE}:${year}`, JSON.stringify(newSchedule));
-        return newSchedule;
-    });
-    };
 
   const changeYear = (newYear) => {
     setStoredYear(newYear);
@@ -105,6 +86,7 @@ export default function SchedulePage() {
           <div className="p-2 rounded-full bg-blue-600">
            <Calendar className="w-6 h-6 text-white" />
          </div>
+          <AuthControl />
         </div>
       </div>
     </header>

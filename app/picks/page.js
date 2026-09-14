@@ -2,44 +2,22 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Heart, ExternalLink, Plus, ArrowLeft, Calendar } from 'lucide-react';
-import { AVAILABLE_YEARS, DEFAULT_YEAR, getStoredYear, setStoredYear, migrateLegacyStorage, buildScheduleItem, sortSchedule } from '@/lib/utils';
+import { AVAILABLE_YEARS, DEFAULT_YEAR, getStoredYear, setStoredYear } from '@/lib/utils';
+import { useBiffData } from '@/lib/useBiffData';
 import SchedulePopup from '@/components/SchedulePopup';
-
-const STORAGE_KEY = 'mybiff:picks';
-const SCHEDULE_STORAGE_KEY = 'mybiff:schedule';
+import AuthControl from '@/components/AuthControl';
 
 export default function PicksPage() {
   const [year, setYear] = useState(DEFAULT_YEAR);
   const [data, setData] = useState(null);
-  const [picks, setPicks] = useState(new Set());
   const [schedules, setSchedules] = useState([]);
-  const [mySchedule, setMySchedule] = useState([]);
   const [selectedFilm, setSelectedFilm] = useState(null);
+  const { picks, togglePick, addToMySchedule } = useBiffData(year);
 
-  // 회차(연도) 로드 + 레거시 저장값 이전
+  // 회차(연도) 로드
   useEffect(() => {
-    migrateLegacyStorage(STORAGE_KEY);
-    migrateLegacyStorage(SCHEDULE_STORAGE_KEY);
     setYear(getStoredYear());
   }, []);
-
-  // 로컬 저장된 찜 불러오기
-  useEffect(() => {
-    if (!year) return;
-    try {
-      const saved = JSON.parse(localStorage.getItem(`${STORAGE_KEY}:${year}`) || '[]');
-      setPicks(new Set(saved));
-    } catch {}
-  }, [year]);
-
-  // 로컬 저장된 내 스케줄 불러오기
-  useEffect(() => {
-    if (!year) return;
-    try {
-      const saved = JSON.parse(localStorage.getItem(`${SCHEDULE_STORAGE_KEY}:${year}`) || '[]');
-      setMySchedule(saved);
-    } catch {}
-  }, [year]);
 
   // 데이터 로드
   useEffect(() => {
@@ -60,44 +38,14 @@ export default function PicksPage() {
       .catch(console.error);
   }, [year]);
 
-  // 찜 동기화
-  const togglePick = (id) => {
-    setPicks(prev => {
-      const s = new Set(prev);
-      s.has(id) ? s.delete(id) : s.add(id);
-
-      // 여기서 직접 저장
-      localStorage.setItem(`${STORAGE_KEY}:${year}`, JSON.stringify([...s]));
-      return s;
-    });
-  };
-
   // 특정 영화의 상영시간표 가져오기
   const getFilmSchedules = (filmId) => {
     return schedules.filter(schedule => schedule.film_id === filmId);
   };
 
-  // 스케줄에 추가
-  const addToMySchedule = (film, schedule) => {
-    const newItem = buildScheduleItem(film, schedule);
-
-    setMySchedule(prev => {
-      if (prev.some(item => item.id === newItem.id)) {
-        alert('이미 추가된 상영입니다.');
-        return prev;
-      }
-
-      const newSchedule = sortSchedule([...prev, newItem]);
-
-      try {
-        localStorage.setItem(`${SCHEDULE_STORAGE_KEY}:${year}`, JSON.stringify(newSchedule));
-      } catch (e) {
-        console.error('스케줄 저장 실패:', e);
-      }
-
-      return newSchedule;
-    });
-
+  // 스케줄에 추가 후 팝업 닫기
+  const handleAddToSchedule = (film, schedule) => {
+    addToMySchedule(film, schedule);
     setSelectedFilm(null);
   };
 
@@ -142,6 +90,7 @@ export default function PicksPage() {
         <Link href="/schedule" className="p-2 rounded-full hover:bg-gray-800 transition-colors">
          <Calendar className="w-6 h-6 text-blue-500" />
       </Link>
+      <AuthControl />
     </div>
   </div>
 </header>
@@ -273,7 +222,7 @@ export default function PicksPage() {
           film={selectedFilm}
           filmSchedules={getFilmSchedules(selectedFilm.id)}
           onClose={() => setSelectedFilm(null)}
-          onAddToSchedule={addToMySchedule}
+          onAddToSchedule={handleAddToSchedule}
         />
       )}
     </div>

@@ -2,22 +2,21 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Heart, ExternalLink, Plus, Calendar } from 'lucide-react';
-import { AVAILABLE_YEARS, DEFAULT_YEAR, getStoredYear, setStoredYear, migrateLegacyStorage, buildScheduleItem, sortSchedule } from '@/lib/utils';
+import { AVAILABLE_YEARS, DEFAULT_YEAR, getStoredYear, setStoredYear } from '@/lib/utils';
+import { useBiffData } from '@/lib/useBiffData';
 import SchedulePopup from '@/components/SchedulePopup';
+import AuthControl from '@/components/AuthControl';
 
 export default function Home() {
   // 상태 관리
   const [year, setYear] = useState(DEFAULT_YEAR);
   const [films, setFilms] = useState(null);
   const [schedules, setSchedules] = useState([]);
-  const [picks, setPicks] = useState(new Set());
-  const [mySchedule, setMySchedule] = useState([]);
   const [selectedFilm, setSelectedFilm] = useState(null);
+  const { picks, mySchedule, togglePick, addToMySchedule } = useBiffData(year);
 
-  // 회차(연도) 로드 + 레거시 저장값 이전
+  // 회차(연도) 로드
   useEffect(() => {
-    migrateLegacyStorage('mybiff:picks');
-    migrateLegacyStorage('mybiff:schedule');
     setYear(getStoredYear());
   }, []);
 
@@ -40,40 +39,6 @@ export default function Home() {
       .catch(console.error);
   }, [year]);
 
-  // localStorage에서 찜 목록 로드
-  useEffect(() => {
-    if (!year) return;
-    const loadPicks = () => {
-      try {
-        const saved = localStorage.getItem(`mybiff:picks:${year}`);
-        setPicks(new Set(saved ? JSON.parse(saved) : []));
-      } catch (e) {
-        console.error('찜 목록 로드 실패:', e);
-      }
-    };
-
-    loadPicks();
-    window.addEventListener('focus', loadPicks);
-    return () => window.removeEventListener('focus', loadPicks);
-  }, [year]);
-
-  // localStorage에서 내 스케줄 로드
-  useEffect(() => {
-    if (!year) return;
-    const loadMySchedule = () => {
-      try {
-        const saved = localStorage.getItem(`mybiff:schedule:${year}`);
-        setMySchedule(saved ? JSON.parse(saved) : []);
-      } catch (e) {
-        console.error('스케줄 로드 실패:', e);
-      }
-    };
-
-    loadMySchedule();
-    window.addEventListener('focus', loadMySchedule);
-    return () => window.removeEventListener('focus', loadMySchedule);
-  }, [year]);
-
   // 회차 전환
   const changeYear = (newYear) => {
     setStoredYear(newYear);
@@ -85,58 +50,9 @@ export default function Home() {
     return schedules.filter(schedule => schedule.film_id === filmId);
   };
 
-  // 찜하기/찜 해제
-  const togglePick = (filmId) => {
-    setPicks(prev => {
-      const newPicks = new Set(prev);
-      
-      if (newPicks.has(filmId)) {
-        newPicks.delete(filmId);
-      } else {
-        newPicks.add(filmId);
-      }
-      
-      try {
-        localStorage.setItem(`mybiff:picks:${year}`, JSON.stringify([...newPicks]));
-      } catch (e) {
-        console.error('찜 목록 저장 실패:', e);
-      }
-      
-      return newPicks;
-    });
-  };
-
-  // 스케줄에 추가
-  const addToMySchedule = (film, schedule) => {
-    const newItem = buildScheduleItem(film, schedule);
-
-    setMySchedule(prev => {
-      if (prev.some(item => item.id === newItem.id)) {
-        alert('이미 추가된 상영입니다.');
-        return prev;
-      }
-
-      const newSchedule = sortSchedule([...prev, newItem]);
-
-      try {
-        localStorage.setItem(`mybiff:schedule:${year}`, JSON.stringify(newSchedule));
-      } catch (e) {
-        console.error('스케줄 저장 실패:', e);
-      }
-
-      return newSchedule;
-    });
-
-    setSelectedFilm(null);
-  };
-
-  // 팝업 열기
-  const openSchedulePopup = (film) => {
-    setSelectedFilm(film);
-  };
-
-  // 팝업 닫기
-  const closeSchedulePopup = () => {
+  // 스케줄에 추가 후 팝업 닫기
+  const handleAddToSchedule = (film, schedule) => {
+    addToMySchedule(film, schedule);
     setSelectedFilm(null);
   };
 
@@ -165,6 +81,7 @@ export default function Home() {
             <Link href="/schedule" className="p-2 rounded-full hover:bg-gray-800 transition-colors">
               <Calendar className="w-6 h-6 text-blue-500" />
             </Link>
+            <AuthControl />
           </div>
         </div>
       </header>
@@ -261,7 +178,7 @@ export default function Home() {
 
                     {/* 스케줄 버튼 */}
                     <button
-                      onClick={() => openSchedulePopup(film)}
+                      onClick={() => setSelectedFilm(film)}
                       className={`p-3 rounded-full transition-all duration-200 ${
                         hasSchedules
                           ? 'bg-blue-800 text-blue-300 hover:bg-blue-700 hover:text-white'
@@ -289,11 +206,11 @@ export default function Home() {
 
       {/* 상영시간표 팝업 */}
       {selectedFilm && (
-        <SchedulePopup 
+        <SchedulePopup
           film={selectedFilm}
           filmSchedules={getFilmSchedules(selectedFilm.id)}
-          onClose={closeSchedulePopup}
-          onAddToSchedule={addToMySchedule}
+          onClose={() => setSelectedFilm(null)}
+          onAddToSchedule={handleAddToSchedule}
         />
       )}
     </div>
