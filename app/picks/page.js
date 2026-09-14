@@ -2,39 +2,55 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Heart, ExternalLink, ArrowLeft, Calendar } from 'lucide-react';
+import { AVAILABLE_YEARS, DEFAULT_YEAR, getStoredYear, setStoredYear, migrateLegacyStorage } from '@/lib/utils';
 
 const STORAGE_KEY = 'mybiff:picks';
 
 export default function PicksPage() {
+  const [year, setYear] = useState(DEFAULT_YEAR);
   const [data, setData] = useState(null);
   const [picks, setPicks] = useState(new Set());
 
+  // 회차(연도) 로드 + 레거시 저장값 이전
+  useEffect(() => {
+    migrateLegacyStorage(STORAGE_KEY);
+    setYear(getStoredYear());
+  }, []);
+
   // 로컬 저장된 찜 불러오기
   useEffect(() => {
+    if (!year) return;
     try {
-      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+      const saved = JSON.parse(localStorage.getItem(`${STORAGE_KEY}:${year}`) || '[]');
       setPicks(new Set(saved));
     } catch {}
-  }, []);
+  }, [year]);
 
   // 데이터 로드
   useEffect(() => {
-    fetch('/screenings.json')
+    if (!year) return;
+    setData(null);
+    fetch(`/screenings-${year}.json`)
       .then(r => r.json())
       .then(setData)
       .catch(console.error);
-  }, []);
+  }, [year]);
 
   // 찜 동기화
   const togglePick = (id) => {
     setPicks(prev => {
       const s = new Set(prev);
       s.has(id) ? s.delete(id) : s.add(id);
-      
+
       // 여기서 직접 저장
-      localStorage.setItem(STORAGE_KEY, JSON.stringify([...s]));
+      localStorage.setItem(`${STORAGE_KEY}:${year}`, JSON.stringify([...s]));
       return s;
     });
+  };
+
+  const changeYear = (newYear) => {
+    setStoredYear(newYear);
+    setYear(newYear);
   };
 
   if (!data) return <div className="loading-text">로딩 중…</div>;
@@ -57,7 +73,16 @@ export default function PicksPage() {
            <h1 className="text-xl font-bold text-white">찜 목록</h1>
          </div>
     
-         <div className="flex gap-2">
+         <div className="flex items-center gap-2">
+          <select
+            value={year}
+            onChange={(e) => changeYear(e.target.value)}
+            className="bg-gray-800 text-white text-sm rounded-full px-3 py-2 border border-gray-700"
+          >
+            {AVAILABLE_YEARS.map((y) => (
+              <option key={y} value={y}>{y}년</option>
+            ))}
+          </select>
           <div className="p-2 rounded-full bg-red-600">
            <Heart className="w-6 h-6 text-white" />
         </div>

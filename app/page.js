@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Heart, ExternalLink, Plus, Clock, X, Calendar } from 'lucide-react';
+import { AVAILABLE_YEARS, DEFAULT_YEAR, getStoredYear, setStoredYear, migrateLegacyStorage } from '@/lib/utils';
 
 // 상영시간표 팝업 컴포넌트
 function SchedulePopup({ film, filmSchedules, onClose, onAddToSchedule }) {
@@ -73,37 +74,46 @@ function SchedulePopup({ film, filmSchedules, onClose, onAddToSchedule }) {
 
 export default function Home() {
   // 상태 관리
+  const [year, setYear] = useState(DEFAULT_YEAR);
   const [films, setFilms] = useState(null);
   const [schedules, setSchedules] = useState([]);
   const [picks, setPicks] = useState(new Set());
   const [mySchedule, setMySchedule] = useState([]);
   const [selectedFilm, setSelectedFilm] = useState(null);
 
+  // 회차(연도) 로드 + 레거시 저장값 이전
+  useEffect(() => {
+    migrateLegacyStorage('mybiff:picks');
+    migrateLegacyStorage('mybiff:schedule');
+    setYear(getStoredYear());
+  }, []);
+
   // 영화 데이터 로드
   useEffect(() => {
-    fetch('/screenings.json')
+    if (!year) return;
+    setFilms(null);
+    fetch(`/screenings-${year}.json`)
       .then(r => r.json())
       .then(setFilms)
       .catch(console.error);
-  }, []);
+  }, [year]);
 
   // 스케줄 데이터 로드
   useEffect(() => {
-    fetch('/schedules.json')
+    if (!year) return;
+    fetch(`/schedules-${year}.json`)
       .then(r => r.json())
       .then(setSchedules)
       .catch(console.error);
-  }, []);
+  }, [year]);
 
   // localStorage에서 찜 목록 로드
   useEffect(() => {
+    if (!year) return;
     const loadPicks = () => {
       try {
-        const saved = localStorage.getItem('mybiff:picks');
-        if (saved) {
-          const picksArray = JSON.parse(saved);
-          setPicks(new Set(picksArray));
-        }
+        const saved = localStorage.getItem(`mybiff:picks:${year}`);
+        setPicks(new Set(saved ? JSON.parse(saved) : []));
       } catch (e) {
         console.error('찜 목록 로드 실패:', e);
       }
@@ -112,17 +122,15 @@ export default function Home() {
     loadPicks();
     window.addEventListener('focus', loadPicks);
     return () => window.removeEventListener('focus', loadPicks);
-  }, []);
+  }, [year]);
 
   // localStorage에서 내 스케줄 로드
   useEffect(() => {
+    if (!year) return;
     const loadMySchedule = () => {
       try {
-        const saved = localStorage.getItem('mybiff:schedule');
-        if (saved) {
-          const scheduleArray = JSON.parse(saved);
-          setMySchedule(scheduleArray);
-        }
+        const saved = localStorage.getItem(`mybiff:schedule:${year}`);
+        setMySchedule(saved ? JSON.parse(saved) : []);
       } catch (e) {
         console.error('스케줄 로드 실패:', e);
       }
@@ -131,7 +139,13 @@ export default function Home() {
     loadMySchedule();
     window.addEventListener('focus', loadMySchedule);
     return () => window.removeEventListener('focus', loadMySchedule);
-  }, []);
+  }, [year]);
+
+  // 회차 전환
+  const changeYear = (newYear) => {
+    setStoredYear(newYear);
+    setYear(newYear);
+  };
 
   // 특정 영화의 스케줄 가져오기
   const getFilmSchedules = (filmId) => {
@@ -150,7 +164,7 @@ export default function Home() {
       }
       
       try {
-        localStorage.setItem('mybiff:picks', JSON.stringify([...newPicks]));
+        localStorage.setItem(`mybiff:picks:${year}`, JSON.stringify([...newPicks]));
       } catch (e) {
         console.error('찜 목록 저장 실패:', e);
       }
@@ -187,7 +201,7 @@ export default function Home() {
       });
 
       try {
-        localStorage.setItem('mybiff:schedule', JSON.stringify(newSchedule));
+        localStorage.setItem(`mybiff:schedule:${year}`, JSON.stringify(newSchedule));
       } catch (e) {
         console.error('스케줄 저장 실패:', e);
       }
@@ -217,7 +231,16 @@ export default function Home() {
       <header className="fixed top-0 left-0 right-0 z-50 bg-gray-900 border-b border-gray-800 backdrop-blur-md">
         <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
           <h1 className="text-xl font-bold text-white">MY BIFF</h1>
-          <div className="flex gap-2">
+          <div className="flex items-center gap-2">
+            <select
+              value={year}
+              onChange={(e) => changeYear(e.target.value)}
+              className="bg-gray-800 text-white text-sm rounded-full px-3 py-2 border border-gray-700"
+            >
+              {AVAILABLE_YEARS.map((y) => (
+                <option key={y} value={y}>{y}년</option>
+              ))}
+            </select>
             <Link href="/picks" className="p-2 rounded-full hover:bg-gray-800 transition-colors">
               <Heart className="w-6 h-6 text-red-500" />
             </Link>
@@ -232,7 +255,7 @@ export default function Home() {
 
       {/* 헤더 정보 */}
       <div className="text-center">
-        <h1 className="text-3xl font-bold text-white mb-2">BIFF 2025</h1>
+        <h1 className="text-3xl font-bold text-white mb-2">BIFF {year}</h1>
         <p className="text-gray-400">부산국제영화제 상영작 리스트</p>
         <div className="text-sm text-gray-500 mt-2">
           전체 <span className="text-white font-semibold">{films.films?.length || 0}</span>편 | 

@@ -2,28 +2,42 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Calendar, Clock, X, ArrowLeft, MapPin, Heart } from 'lucide-react';
+import { AVAILABLE_YEARS, DEFAULT_YEAR, getStoredYear, setStoredYear, migrateLegacyStorage } from '@/lib/utils';
 
 const STORAGE_KEY_SCHEDULE = 'mybiff:schedule';
 
 export default function SchedulePage() {
+  const [year, setYear] = useState(DEFAULT_YEAR);
   const [mySchedule, setMySchedule] = useState([]);
+
+  // 회차(연도) 로드 + 레거시 저장값 이전
+  useEffect(() => {
+    migrateLegacyStorage(STORAGE_KEY_SCHEDULE);
+    setYear(getStoredYear());
+  }, []);
 
   // 저장된 스케줄 불러오기
   useEffect(() => {
+    if (!year) return;
     try {
-      const savedSchedule = JSON.parse(localStorage.getItem(STORAGE_KEY_SCHEDULE) || '[]');
+      const savedSchedule = JSON.parse(localStorage.getItem(`${STORAGE_KEY_SCHEDULE}:${year}`) || '[]');
       setMySchedule(savedSchedule);
     } catch {}
-  }, []);
+  }, [year]);
 
   // 스케줄 동기화
     const removeFromSchedule = (scheduleId) => {
     setMySchedule(prev => {
         const newSchedule = prev.filter(item => item.id !== scheduleId);
-        localStorage.setItem(STORAGE_KEY_SCHEDULE, JSON.stringify(newSchedule));
+        localStorage.setItem(`${STORAGE_KEY_SCHEDULE}:${year}`, JSON.stringify(newSchedule));
         return newSchedule;
     });
     };
+
+  const changeYear = (newYear) => {
+    setStoredYear(newYear);
+    setYear(newYear);
+  };
 
   // 날짜별로 그룹핑
   const groupSchedulesByDate = () => {
@@ -47,7 +61,7 @@ export default function SchedulePage() {
   const formatDate = (dateString) => {
     const month = dateString.split('-')[0];
     const day = dateString.split('-')[1];
-    const date = new Date(2025, parseInt(month) - 1, parseInt(day));
+    const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
     
     const weekdays = ['일', '월', '화', '수', '목', '금', '토'];
     const weekday = weekdays[date.getDay()];
@@ -75,7 +89,16 @@ export default function SchedulePage() {
            <h1 className="text-xl font-bold text-white">내 시간표</h1>
         </div>
     
-        <div className="flex gap-2">
+        <div className="flex items-center gap-2">
+          <select
+            value={year}
+            onChange={(e) => changeYear(e.target.value)}
+            className="bg-gray-800 text-white text-sm rounded-full px-3 py-2 border border-gray-700"
+          >
+            {AVAILABLE_YEARS.map((y) => (
+              <option key={y} value={y}>{y}년</option>
+            ))}
+          </select>
           <Link href="/picks" className="p-2 rounded-full hover:bg-gray-800 transition-colors">
            <Heart className="w-6 h-6 text-red-500" />
           </Link>
