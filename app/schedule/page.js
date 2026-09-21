@@ -2,10 +2,10 @@
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { Calendar, Clock, X, ArrowLeft, MapPin, Heart, ExternalLink, List, GanttChartSquare, Download, Loader2 } from 'lucide-react';
-import { AVAILABLE_YEARS, DEFAULT_YEAR, getStoredYear, setStoredYear } from '@/lib/utils';
+import { AVAILABLE_YEARS, DEFAULT_YEAR, getStoredYear, setStoredYear, parseRuntimeMinutes } from '@/lib/utils';
 import { useBiffData } from '@/lib/useBiffData';
 import AuthControl from '@/components/AuthControl';
-import ScheduleTimetable from '@/components/ScheduleTimetable';
+import ScheduleGrid from '@/components/ScheduleGrid';
 import { captureAndSave } from '@/lib/captureImage';
 
 export default function SchedulePage() {
@@ -76,6 +76,20 @@ export default function SchedulePage() {
   // 스케줄 항목의 filmId로 영화 상세 정보(detailUrl) 찾기
   const getFilmDetailUrl = (filmId) => {
     return films?.films?.find(film => film.id === filmId)?.detailUrl;
+  };
+
+  // 스케줄 항목의 filmId로 러닝타임(분) 찾기 — 없으면 null
+  const getFilmRuntimeMinutes = (filmId) => {
+    const runtime = films?.films?.find(film => film.id === filmId)?.runtime;
+    return parseRuntimeMinutes(runtime);
+  };
+
+  // 시간표(격자) 헤더용 짧은 날짜 포맷
+  const formatDateShort = (dateString) => {
+    const [month, day] = dateString.split('-');
+    const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+    const weekdays = ['일', '월', '화', '수', '목', '금', '토'];
+    return `${parseInt(month)}/${day}(${weekdays[date.getDay()]})`;
   };
 
   return (
@@ -172,12 +186,12 @@ export default function SchedulePage() {
           <>
           <div ref={captureRef} className="bg-black">
           {view === 'timetable' ? (
-            <ScheduleTimetable
+            <ScheduleGrid
               sortedDates={sortedDates}
               groupedSchedules={groupedSchedules}
-              formatDate={formatDate}
+              formatDateShort={formatDateShort}
               getFilmDetailUrl={getFilmDetailUrl}
-              onRemove={removeFromSchedule}
+              getFilmRuntimeMinutes={getFilmRuntimeMinutes}
             />
           ) : (
           <div className="space-y-8">
