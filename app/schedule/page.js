@@ -1,14 +1,19 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { Calendar, Clock, X, ArrowLeft, MapPin, Heart, ExternalLink } from 'lucide-react';
+import { Calendar, Clock, X, ArrowLeft, MapPin, Heart, ExternalLink, List, GanttChartSquare, Download, Loader2 } from 'lucide-react';
 import { AVAILABLE_YEARS, DEFAULT_YEAR, getStoredYear, setStoredYear } from '@/lib/utils';
 import { useBiffData } from '@/lib/useBiffData';
 import AuthControl from '@/components/AuthControl';
+import ScheduleTimetable from '@/components/ScheduleTimetable';
+import { captureAndSave } from '@/lib/captureImage';
 
 export default function SchedulePage() {
   const [year, setYear] = useState(DEFAULT_YEAR);
   const [films, setFilms] = useState(null);
+  const [view, setView] = useState('list'); // 'list' | 'timetable'
+  const [capturing, setCapturing] = useState(false);
+  const captureRef = useRef(null);
   const { mySchedule, removeFromSchedule } = useBiffData(year);
 
   // 회차(연도) 로드
@@ -107,6 +112,47 @@ export default function SchedulePage() {
     </header>
 
       <main className="pt-20 max-w-4xl mx-auto p-4">
+        {mySchedule.length > 0 && (
+          <div className="flex items-center justify-between gap-2 mb-4 flex-wrap">
+            <div className="flex gap-1 bg-gray-900 border border-gray-800 rounded-full p-1">
+              <button
+                onClick={() => setView('list')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm transition-colors ${
+                  view === 'list' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                <List className="w-4 h-4" />
+                목록
+              </button>
+              <button
+                onClick={() => setView('timetable')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm transition-colors ${
+                  view === 'timetable' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                <GanttChartSquare className="w-4 h-4" />
+                시간표
+              </button>
+            </div>
+            <button
+              onClick={async () => {
+                setCapturing(true);
+                try {
+                  await captureAndSave(captureRef.current, `내시간표_BIFF${year}.png`);
+                } finally {
+                  setCapturing(false);
+                }
+              }}
+              disabled={capturing}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm bg-gray-900 border border-gray-800 text-gray-300 hover:bg-gray-800 hover:text-white transition-colors disabled:opacity-50"
+              title="이미지로 저장/공유"
+            >
+              {capturing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+              이미지로 저장
+            </button>
+          </div>
+        )}
+
         {mySchedule.length === 0 ? (
           <div className="text-center py-16">
             <div className="mb-6">
@@ -123,6 +169,17 @@ export default function SchedulePage() {
             </Link>
           </div>
         ) : (
+          <>
+          <div ref={captureRef} className="bg-black">
+          {view === 'timetable' ? (
+            <ScheduleTimetable
+              sortedDates={sortedDates}
+              groupedSchedules={groupedSchedules}
+              formatDate={formatDate}
+              getFilmDetailUrl={getFilmDetailUrl}
+              onRemove={removeFromSchedule}
+            />
+          ) : (
           <div className="space-y-8">
             {sortedDates.map(date => (
               <div key={date} className="space-y-4">
@@ -203,17 +260,20 @@ export default function SchedulePage() {
                 </div>
               </div>
             ))}
-
-            {/* 하단 액션 */}
-            <div className="text-center pt-8 border-t border-gray-800">
-              <Link 
-                href="/" 
-                className="inline-flex items-center gap-2 px-6 py-3 bg-gray-800 text-gray-300 rounded-lg hover:bg-gray-700 hover:text-white transition-colors"
-              >
-                더 많은 영화 찾기
-              </Link>
-            </div>
           </div>
+          )}
+          </div>
+
+          {/* 하단 액션 */}
+          <div className="text-center pt-8 border-t border-gray-800 mt-8">
+            <Link
+              href="/"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-gray-800 text-gray-300 rounded-lg hover:bg-gray-700 hover:text-white transition-colors"
+            >
+              더 많은 영화 찾기
+            </Link>
+          </div>
+          </>
         )}
       </main>
     </div>
